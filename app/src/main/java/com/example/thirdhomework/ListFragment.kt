@@ -15,7 +15,7 @@ class ListFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val rootView = inflater.inflate(R.layout.fragment_list, container, false)
-        val list = rootView.findViewById(R.id.list_of_cpu) as RecyclerView // Add this
+        val list = rootView.findViewById(R.id.list_of_cpu) as RecyclerView
         list.layoutManager = LinearLayoutManager(activity)
         list.adapter = adapter
         return rootView
