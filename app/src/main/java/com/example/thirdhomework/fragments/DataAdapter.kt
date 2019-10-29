@@ -1,11 +1,14 @@
-package com.example.thirdhomework
+package com.example.thirdhomework.fragments
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView.Adapter
+import com.example.thirdhomework.listener.OnItemListener
+import com.example.thirdhomework.R
+import com.example.thirdhomework.data.CPU
 
 class DataAdapter(
-    private val processors: MutableList<CentralProcessUnit>,
+    private val processors: MutableList<CPU>,
     private val onItemListener: OnItemListener
 ) : Adapter<CustomViewHolder>() {
 
@@ -24,7 +27,6 @@ class DataAdapter(
         processors[position].apply {
             holder.image.setImageResource(image)
             holder.name.text = name
-            holder.description.text = description
             holder.listListener
         }
     }

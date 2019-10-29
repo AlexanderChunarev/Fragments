@@ -3,117 +3,96 @@ package com.example.thirdhomework
 import android.content.res.Configuration.*
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import kotlinx.android.synthetic.main.activity_main.*
-
+import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
+import com.example.thirdhomework.data.DataHelper
+import com.example.thirdhomework.fragments.DataAdapter
+import com.example.thirdhomework.fragments.InfoFragment
+import com.example.thirdhomework.fragments.ListFragment
+import com.example.thirdhomework.listener.OnItemListener
 
 class MainActivity : AppCompatActivity(), OnItemListener {
-
-    private var processors: MutableList<CentralProcessUnit> = ArrayList()
+    private var processors = DataHelper().getProcessors()
     private val dataAdapter = DataAdapter(processors, this)
+    private var currentPosition = NOT_SELECTED_ITEM
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setData()
-        val listFragment = initListFragment()
-        when (ORIENTATION_PORTRAIT) {
-            this.resources.configuration.orientation -> supportFragmentManager.beginTransaction()
-                .add(R.id.container, listFragment)
-                .commit()
-            else -> supportFragmentManager.beginTransaction()
-                .add(R.id.info_fragment, InfoFragment())
-                .add(R.id.list_fragment, listFragment)
-                .commit()
-        }
-
+        initFragments()
         if (savedInstanceState != null) {
-            val fragment = supportFragmentManager.getFragment(savedInstanceState, "info_fragment")
-            if (fragment != null) {
-                when (ORIENTATION_PORTRAIT) {
-                    this.resources.configuration.orientation ->  supportFragmentManager.beginTransaction()
-                        .remove(fragment)
-                        .replace(R.id.container, recreateFragment(fragment))
+            currentPosition = savedInstanceState.getInt(POSITION_KEY)
+            clearBackStack()
+            changeFragment(InfoFragment.newInstance(currentPosition))
+        }
+    }
+
+    override fun onClickItem(position: Int) {
+        val fragment = InfoFragment.newInstance(position)
+        currentPosition = position
+        changeFragment(fragment)
+    }
+
+    private fun changeFragment(fragment: InfoFragment) {
+        when (ORIENTATION_PORTRAIT) {
+            resources.configuration.orientation -> {
+                if (isItemSelected()) {
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.list_container, fragment)
+                        .addToBackStack(null)
                         .commit()
-                    else -> supportFragmentManager.beginTransaction()
-                        .remove(fragment)
-                        .replace(R.id.info_fragment, recreateFragment(fragment))
+                } else {
+                    supportFragmentManager.beginTransaction()
+                        .show(supportFragmentManager.findFragmentById(R.id.list_container)!!)
                         .commit()
                 }
             }
-
+            else -> {
+                if (isItemSelected()) {
+                    clearBackStack()
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.info_container, fragment)
+                        .addToBackStack(null)
+                        .commit()
+                }
+            }
         }
-
-
-//        if (supportFragmentManager.backStackEntryCount > 0) {
-//            val fragment = supportFragmentManager.findFragmentById(R.id.info_fragment)
-//            val ft = supportFragmentManager.beginTransaction()
-//            if (fragment != null) {
-//                ft.remove(fragment)
-//                val newInstance = recreateFragment(fragment)
-//                ft.replace(R.id.container, newInstance)
-//                ft.commit()
-//            }
-//
-////
-////            if (fr != null) {
-////                supportFragmentManager.beginTransaction()
-////                    .replace(R.id.container, fr)
-////                    .addToBackStack(null)
-////                    .commit()
-////            }
-//        }
     }
 
-    private fun recreateFragment(f: Fragment): Fragment {
-        try {
-            val savedState = supportFragmentManager.saveFragmentInstanceState(f)
+    private fun isItemSelected() = currentPosition > NOT_SELECTED_ITEM
 
-            val newInstance = f::class.java.newInstance()
-            newInstance.setInitialSavedState(savedState)
-
-            return newInstance
-        } catch (e: Exception) // InstantiationException, IllegalAccessException
-        {
-            throw RuntimeException("Cannot reinstantiate fragment " + f::class.java.getName(), e)
+    private fun initFragments() {
+        val listFragment = initListFragment()
+        when (ORIENTATION_PORTRAIT) {
+            this.resources.configuration.orientation -> {
+                supportFragmentManager.beginTransaction()
+                    .add(R.id.list_container, listFragment)
+                    .commit()
+            }
+            else -> supportFragmentManager.beginTransaction()
+                .add(R.id.info_container, InfoFragment())
+                .add(R.id.list_container, listFragment)
+                .commit()
         }
-
     }
+
+    private fun clearBackStack() =
+        supportFragmentManager.popBackStack(null, POP_BACK_STACK_INCLUSIVE)
 
     private fun initListFragment() = ListFragment().apply {
         adapter = dataAdapter
     }
 
-    private fun setData() {
-        processors.add(CentralProcessUnit("i9-9900K", "asdasd", R.drawable.i9))
-        processors.add(CentralProcessUnit("i10-9900K", "asda2q111sd", R.drawable.i9))
-    }
-
-    override fun onClickItem(position: Int) {
-        val fragment = InfoFragment().apply {
-            arguments = Bundle().apply {
-                putString("title", processors[position].name)
-                putString("description", processors[position].description)
-            }
-        }
-
-        when (ORIENTATION_PORTRAIT) {
-            resources.configuration.orientation -> supportFragmentManager.beginTransaction()
-                .replace(R.id.container, fragment)
-                .addToBackStack(null)
-                .commit()
-            else -> supportFragmentManager.beginTransaction()
-                .replace(R.id.info_fragment, fragment)
-                .addToBackStack(null)
-                .commit()
-        }
-    }
-
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        val fragment = supportFragmentManager.findFragmentById(R.id.info_fragment)
-        if (fragment != null) {
-            supportFragmentManager.putFragment(outState, "info_fragment", fragment)
+        if (supportFragmentManager.backStackEntryCount != 0) {
+            outState.putInt(POSITION_KEY, currentPosition)
+        } else {
+            outState.putInt(POSITION_KEY, NOT_SELECTED_ITEM)
         }
+    }
+
+    companion object {
+        const val NOT_SELECTED_ITEM = -1
+        const val POSITION_KEY = "position"
     }
 }

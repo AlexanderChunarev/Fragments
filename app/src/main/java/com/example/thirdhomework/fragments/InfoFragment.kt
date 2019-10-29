@@ -1,11 +1,13 @@
-package com.example.thirdhomework
+package com.example.thirdhomework.fragments
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import kotlinx.android.synthetic.main.fragment_info.*
+import com.example.thirdhomework.MainActivity.Companion.NOT_SELECTED_ITEM
+import com.example.thirdhomework.R
+import com.example.thirdhomework.data.DataHelper
 import kotlinx.android.synthetic.main.fragment_info.view.*
 
 class InfoFragment : Fragment() {
@@ -24,19 +26,13 @@ class InfoFragment : Fragment() {
         return rootView
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        if (savedInstanceState != null) {
-            cpu_title.text = savedInstanceState.getString("title")
-            cpu_description.text = savedInstanceState.getString("description")
-        }
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        if (arguments != null) {
-            outState.putString("title", arguments?.getString("title"))
-            outState.putString("description", arguments?.getString("description"))
+    companion object {
+        fun newInstance(position: Int) = InfoFragment().apply {
+            if (position > NOT_SELECTED_ITEM)
+            arguments = Bundle().apply {
+                putString("title", DataHelper().getProcessors()[position].name)
+                putString("description", DataHelper().getProcessors()[position].description)
+            }
         }
     }
 }
