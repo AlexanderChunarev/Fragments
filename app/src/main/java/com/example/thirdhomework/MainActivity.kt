@@ -3,7 +3,6 @@ package com.example.thirdhomework
 import android.content.res.Configuration.*
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Toast
 import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
 import com.example.thirdhomework.data.CPU
 import com.example.thirdhomework.data.DataHelper
@@ -21,11 +20,39 @@ class MainActivity : AppCompatActivity(), OnItemListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         initFragments()
-
+        initCpuObject()
         if (savedInstanceState != null) {
             if (savedInstanceState.getSerializable(CPU_KEY) != null) {
                 currentCPU = savedInstanceState.getSerializable(CPU_KEY) as CPU
                 switchFragment(currentCPU!!)
+            }
+        }
+    }
+
+    private fun initFragments() {
+        val listFragment = initListFragmentAdapter()
+        when {
+            ORIENTATION_PORTRAIT == resources.configuration.orientation -> {
+                clearBackStack()
+                supportFragmentManager.beginTransaction()
+                    .add(R.id.list_container, listFragment)
+                    .commit()
+            }
+            ORIENTATION_LANDSCAPE == resources.configuration.orientation -> {
+                supportFragmentManager.beginTransaction()
+                    .add(R.id.info_container, InfoFragment())
+                    .add(R.id.list_container, listFragment)
+                    .commit()
+            }
+        }
+    }
+
+    private fun initCpuObject() {
+        supportFragmentManager.addOnBackStackChangedListener {
+            if (ORIENTATION_PORTRAIT == resources.configuration.orientation
+                && supportFragmentManager.backStackEntryCount == 0
+            ) {
+                currentCPU = null
             }
         }
     }
@@ -54,42 +81,22 @@ class MainActivity : AppCompatActivity(), OnItemListener {
 
     private fun isItemSelected() = currentCPU != null
 
-    private fun initFragments() {
-        val listFragment = initListFragment()
-        when {
-            ORIENTATION_PORTRAIT == resources.configuration.orientation -> {
-                clearBackStack()
-                supportFragmentManager.beginTransaction()
-                    .add(R.id.list_container, listFragment)
-                    .commit()
-            }
-            ORIENTATION_LANDSCAPE == resources.configuration.orientation -> {
-                supportFragmentManager.beginTransaction()
-                    .add(R.id.info_container, InfoFragment())
-                    .add(R.id.list_container, listFragment)
-                    .commit()
-            }
-        }
-    }
-
     private fun clearBackStack() {
         supportFragmentManager.popBackStack(null, POP_BACK_STACK_INCLUSIVE)
     }
 
-    private fun initListFragment() = ListFragment().apply {
+    private fun initListFragmentAdapter() = ListFragment().apply {
         adapter = dataAdapter
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-
         if (currentCPU != null) {
             outState.putSerializable(CPU_KEY, currentCPU)
         }
     }
 
     companion object {
-        const val NOT_SELECTED_ITEM = -1
         const val CPU_KEY = "position"
     }
 }
