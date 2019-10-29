@@ -5,9 +5,9 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.example.thirdhomework.MainActivity.Companion.NOT_SELECTED_ITEM
+import com.example.thirdhomework.MainActivity.Companion.CPU_KEY
 import com.example.thirdhomework.R
-import com.example.thirdhomework.data.DataHelper
+import com.example.thirdhomework.data.CPU
 import kotlinx.android.synthetic.main.fragment_info.view.*
 
 class InfoFragment : Fragment() {
@@ -19,19 +19,18 @@ class InfoFragment : Fragment() {
         val rootView = inflater.inflate(R.layout.fragment_info, container, false)
         if (arguments != null) {
             rootView.apply {
-                cpu_title?.text = arguments?.getString("title")
-                cpu_description?.text = arguments?.getString("description")
+                val cpu = arguments!!.getSerializable(CPU_KEY) as CPU
+                cpu_title?.text = cpu.name
+                cpu_description?.text = cpu.description
             }
         }
         return rootView
     }
 
     companion object {
-        fun newInstance(position: Int) = InfoFragment().apply {
-            if (position > NOT_SELECTED_ITEM)
+        fun newInstance(cpu: CPU) = InfoFragment().apply {
             arguments = Bundle().apply {
-                putString("title", DataHelper().getProcessors()[position].name)
-                putString("description", DataHelper().getProcessors()[position].description)
+                putSerializable(CPU_KEY, cpu)
             }
         }
     }
