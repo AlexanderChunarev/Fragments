@@ -25,7 +25,6 @@ class MainActivity : AppCompatActivity(), OnItemListener {
         if (savedInstanceState != null) {
             if (savedInstanceState.getSerializable(CPU_KEY) != null) {
                 currentCPU = savedInstanceState.getSerializable(CPU_KEY) as CPU
-                Toast.makeText(this, currentCPU.toString(), Toast.LENGTH_LONG).show()
                 switchFragment(currentCPU!!)
             }
         }
@@ -58,13 +57,13 @@ class MainActivity : AppCompatActivity(), OnItemListener {
     private fun initFragments() {
         val listFragment = initListFragment()
         when {
-            ORIENTATION_LANDSCAPE == resources.configuration.orientation -> {
+            ORIENTATION_PORTRAIT == resources.configuration.orientation -> {
                 clearBackStack()
                 supportFragmentManager.beginTransaction()
                     .add(R.id.list_container, listFragment)
                     .commit()
             }
-            ORIENTATION_PORTRAIT == resources.configuration.orientation -> {
+            ORIENTATION_LANDSCAPE == resources.configuration.orientation -> {
                 supportFragmentManager.beginTransaction()
                     .add(R.id.info_container, InfoFragment())
                     .add(R.id.list_container, listFragment)
