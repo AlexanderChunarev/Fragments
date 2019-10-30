@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:paddingTop="8dp"
-    android:layout_width="match_parent"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
     <ImageView
@@ -23,5 +23,6 @@
         android:layout_marginStart="8dp"
         android:text="Name"
         app:layout_constraintBottom_toBottomOf="@+id/phone_image"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/phone_image" />
 </androidx.constraintlayout.widget.ConstraintLayout>
