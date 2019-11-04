@@ -26,7 +26,7 @@ class DataAdapter(
 
     override fun onBindViewHolder(holder: CustomViewHolder, position: Int) {
         processors[position].apply {
-            Picasso.get().load(image).into(holder.image)
+            Picasso.get().load(image).fit().into(holder.image)
             holder.name.text = name
             holder.listListener
         }

@@ -2,8 +2,10 @@ package com.example.thirdhomework
 
 import android.content.res.Configuration.*
 import android.os.AsyncTask
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.annotation.RequiresApi
 
 import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
 import com.example.thirdhomework.data.CPU
@@ -46,25 +48,28 @@ class MainActivity : AppCompatActivity(), OnItemListener {
     private class Content : AsyncTask<Void, Void, MutableList<CPU>>() {
         private var array = mutableListOf<CPU>()
 
+        @RequiresApi(Build.VERSION_CODES.N)
         override fun doInBackground(vararg voids: Void): MutableList<CPU>? {
             val doc = Jsoup.connect(URL).get()
             val element = doc.select("div.br-static")
-            (0 until element.size).forEach { i ->
-                val url = element.select("h3").select("a").eq(i)
-                try {
-                    Jsoup.connect(url.attr("abs:href")).get().apply {
-                        array.add(
-                            CPU(
-                                select("h1[class=title]").text(),
-                                select("div.br-pr-about").text(),
-                                select("img[id=product_main_image]").attr("src")
+            (0 until element.size)
+                .map { element.select("h3").select("a").eq(it) }
+                .parallelStream()
+                .forEach {
+                    try {
+                        Jsoup.connect(it.attr("abs:href")).get().apply {
+                            array.add(
+                                CPU(
+                                    select("h1[class=title]").text(),
+                                    select("div.br-pr-about").text(),
+                                    select("img[id=product_main_image]").attr("src")
+                                )
                             )
-                        )
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
                 }
-            }
             return array
         }
     }
