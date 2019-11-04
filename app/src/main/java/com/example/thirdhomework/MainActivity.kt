@@ -4,79 +4,69 @@ import android.content.res.Configuration.*
 import android.os.AsyncTask
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Toast
+
 import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
 import com.example.thirdhomework.data.CPU
 import com.example.thirdhomework.fragments.DataAdapter
 import com.example.thirdhomework.fragments.InfoFragment
 import com.example.thirdhomework.fragments.ListFragment
 import com.example.thirdhomework.listener.OnItemListener
-import kotlinx.coroutines.*
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
+import java.io.Serializable
 
 class MainActivity : AppCompatActivity(), OnItemListener {
-    private var processors = mutableListOf<CPU>()
     private lateinit var dataAdapter: DataAdapter
+    private var processors = mutableListOf<CPU>()
     private var currentCPU: CPU? = null
+    private var content = Content()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         if (savedInstanceState != null) {
+            if (savedInstanceState.getSerializable(LIST_KEY) != null) {
+                processors = savedInstanceState.getSerializable(LIST_KEY) as MutableList<CPU>
+                dataAdapter = DataAdapter(processors, this)
+                initFragments()
+            }
             if (savedInstanceState.getSerializable(CPU_KEY) != null) {
                 currentCPU = savedInstanceState.getSerializable(CPU_KEY) as CPU
                 switchFragment(currentCPU!!)
             }
-
-            if (savedInstanceState.getSerializable("List") != null) {
-                processors = savedInstanceState.getSerializable("List") as MutableList<CPU>
-            }
+        } else {
+            content.execute()
+            processors = content.get()
+            dataAdapter = DataAdapter(processors, this)
+            initFragments()
         }
-
-        if (processors.isEmpty()) {
-            Content().execute()
-        }
-
-        dataAdapter = DataAdapter(processors, this)
-        initFragments()
         initCpuObject()
     }
 
-    private inner class Content : AsyncTask<Void, Void, Void>() {
+    private class Content : AsyncTask<Void, Void, MutableList<CPU>>() {
+        private var array = mutableListOf<CPU>()
 
-        override fun onPostExecute(result: Void?) {
-            super.onPostExecute(result)
-            dataAdapter.notifyDataSetChanged()
-        }
-
-        override fun doInBackground(vararg voids: Void): Void? {
-            val doc =
-                Jsoup.connect("https://brain.com.ua/ukr/category/Procesory-c1097-128/filter=3-21501270000,528-86029031100/")
-                    .get()
+        override fun doInBackground(vararg voids: Void): MutableList<CPU>? {
+            val doc = Jsoup.connect(URL).get()
             val element = doc.select("div.br-static")
-
-                for (i in 0 until element.size) {
-                    val url = element.select("h3").select("a").eq(i)
-                    val cpuPage: Document
-                    try {
-
-                        cpuPage = Jsoup.connect(url.attr("abs:href")).get()
-                        processors.add(
+            (0 until element.size).forEach { i ->
+                val url = element.select("h3").select("a").eq(i)
+                try {
+                    Jsoup.connect(url.attr("abs:href")).get().apply {
+                        array.add(
                             CPU(
-                                cpuPage.select("span[id=price_currency]").text(),
-                                cpuPage.select("div.br-pr-about").text(),
-                                cpuPage.select("img[id=product_main_image]").attr("src")
+                                select("h1[class=title]").text(),
+                                select("div.br-pr-about").text(),
+                                select("img[id=product_main_image]").attr("src")
                             )
                         )
-                    } catch (e: Exception) {
-                        e.printStackTrace()
                     }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
-            return null
+            }
+            return array
         }
-
     }
 
     private fun initFragments() {
@@ -144,10 +134,13 @@ class MainActivity : AppCompatActivity(), OnItemListener {
         if (currentCPU != null) {
             outState.putSerializable(CPU_KEY, currentCPU)
         }
-        outState.putSerializable("List", ArrayList(processors))
+        outState.putSerializable(LIST_KEY, processors as Serializable)
     }
 
     companion object {
         const val CPU_KEY = "position"
+        const val LIST_KEY = "list"
+        const val URL =
+            "https://brain.com.ua/ukr/category/Procesory-c1097-128/filter=19590-66000347500,19590-68000009500,19590-75000454900,528-86000152200,528-86029031100/"
     }
 }
