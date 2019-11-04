@@ -1,10 +1,12 @@
 package com.example.thirdhomework
 
+import android.content.Context
 import android.content.res.Configuration.*
 import android.os.AsyncTask
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 
 import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
@@ -15,6 +17,9 @@ import com.example.thirdhomework.fragments.ListFragment
 import com.example.thirdhomework.listener.OnItemListener
 import org.jsoup.Jsoup
 import java.io.Serializable
+import java.util.stream.Collector
+import java.util.stream.Collectors
+import java.util.stream.Collectors.*
 
 class MainActivity : AppCompatActivity(), OnItemListener {
     private lateinit var dataAdapter: DataAdapter
@@ -46,31 +51,21 @@ class MainActivity : AppCompatActivity(), OnItemListener {
     }
 
     private class Content : AsyncTask<Void, Void, MutableList<CPU>>() {
-        private var array = mutableListOf<CPU>()
-
         @RequiresApi(Build.VERSION_CODES.N)
         override fun doInBackground(vararg voids: Void): MutableList<CPU>? {
             val doc = Jsoup.connect(URL).get()
             val element = doc.select("div.br-static")
-            (0 until element.size)
-                .map { element.select("h3").select("a").eq(it) }
-                .parallelStream()
-                .forEach {
-                    try {
-                        Jsoup.connect(it.attr("abs:href")).get().apply {
-                            array.add(
-                                CPU(
-                                    select("h1[class=title]").text(),
-                                    select("div.br-pr-about").text(),
-                                    select("img[id=product_main_image]").attr("src")
-                                )
-                            )
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
-            return array
+            return element.run {
+                select("h3").select("a")
+                        .parallelStream()
+                        .map { url -> Jsoup.connect(url.attr("abs:href")).get() }
+                        .map { info -> CPU(
+                                info.select("h1[class=title]").text(),
+                                info.select("div.br-pr-about").text(),
+                                info.select("img[id=product_main_image]").attr("src")
+                            )}
+                        .collect(toList<CPU>())
+            }
         }
     }
 
