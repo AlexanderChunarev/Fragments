@@ -5,5 +5,5 @@ import java.io.Serializable
 data class CPU(
     var name: String,
     var description: String,
-    var image: Int
+    var image: String
 ) : Serializable

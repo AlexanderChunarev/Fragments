@@ -34,7 +34,13 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     def recyclerview_version = "1.0.0"
-
     implementation "androidx.recyclerview:recyclerview:$recyclerview_version"
     implementation "androidx.recyclerview:recyclerview-selection:$recyclerview_version"
+    def cardview_version = "1.0.0"
+
+    implementation "androidx.cardview:cardview:$cardview_version"
+    implementation("org.jsoup:jsoup:1.11.3")
+    implementation 'com.squareup.picasso:picasso:2.71828'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.2'
 }

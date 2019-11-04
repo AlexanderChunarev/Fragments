@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.example.thirdhomework.listener.OnItemListener
 import com.example.thirdhomework.R
 import com.example.thirdhomework.data.CPU
+import com.squareup.picasso.Picasso
 
 class DataAdapter(
     private val processors: MutableList<CPU>,
@@ -25,7 +26,7 @@ class DataAdapter(
 
     override fun onBindViewHolder(holder: CustomViewHolder, position: Int) {
         processors[position].apply {
-            holder.image.setImageResource(image)
+            Picasso.get().load(image).into(holder.image)
             holder.name.text = name
             holder.listListener
         }
