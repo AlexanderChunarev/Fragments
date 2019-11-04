@@ -1,2 +1,2 @@
 # QR-code to .apk file
-![qrcode](https://user-images.githubusercontent.com/44711132/67794782-e6b92b00-fa85-11e9-8937-737da6a6094f.png)
+![qr](https://user-images.githubusercontent.com/44711132/68144266-f3cd9280-ff3b-11e9-9ab1-804cf570a93a.png)
