@@ -1,31 +1,23 @@
 package com.example.thirdhomework
 
-import android.content.Context
 import android.content.res.Configuration.*
-import android.os.AsyncTask
-import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Toast
-import androidx.annotation.RequiresApi
-
 import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
 import com.example.thirdhomework.data.CPU
 import com.example.thirdhomework.fragments.DataAdapter
 import com.example.thirdhomework.fragments.InfoFragment
 import com.example.thirdhomework.fragments.ListFragment
 import com.example.thirdhomework.listener.OnItemListener
+import kotlinx.coroutines.*
 import org.jsoup.Jsoup
 import java.io.Serializable
-import java.util.stream.Collector
-import java.util.stream.Collectors
 import java.util.stream.Collectors.*
 
 class MainActivity : AppCompatActivity(), OnItemListener {
     private lateinit var dataAdapter: DataAdapter
     private var processors = mutableListOf<CPU>()
     private var currentCPU: CPU? = null
-    private var content = Content()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,7 +26,7 @@ class MainActivity : AppCompatActivity(), OnItemListener {
         if (savedInstanceState != null) {
             if (savedInstanceState.getSerializable(LIST_KEY) != null) {
                 processors = savedInstanceState.getSerializable(LIST_KEY) as MutableList<CPU>
-                dataAdapter = DataAdapter(processors, this)
+                initAdapter()
                 initFragments()
             }
             if (savedInstanceState.getSerializable(CPU_KEY) != null) {
@@ -42,30 +34,30 @@ class MainActivity : AppCompatActivity(), OnItemListener {
                 switchFragment(currentCPU!!)
             }
         } else {
-            content.execute()
-            processors = content.get()
-            dataAdapter = DataAdapter(processors, this)
+            runBlocking {
+                getData()
+            }
+            initAdapter()
             initFragments()
         }
         initCpuObject()
     }
 
-    private class Content : AsyncTask<Void, Void, MutableList<CPU>>() {
-        @RequiresApi(Build.VERSION_CODES.N)
-        override fun doInBackground(vararg voids: Void): MutableList<CPU>? {
-            val doc = Jsoup.connect(URL).get()
-            val element = doc.select("div.br-static")
-            return element.run {
-                select("h3").select("a")
-                        .parallelStream()
-                        .map { url -> Jsoup.connect(url.attr("abs:href")).get() }
-                        .map { info -> CPU(
-                                info.select("h1[class=title]").text(),
-                                info.select("div.br-pr-about").text(),
-                                info.select("img[id=product_main_image]").attr("src")
-                            )}
-                        .collect(toList<CPU>())
-            }
+    private suspend fun getData() = withContext(Dispatchers.IO) {
+        val doc = Jsoup.connect(URL).get()
+        val element = doc.select("div.br-static")
+        processors = element.run {
+            select("h3").select("a")
+                .parallelStream()
+                .map { url -> Jsoup.connect(url.attr("abs:href")).get() }
+                .map { info ->
+                    CPU(
+                        info.select("h1[class=title]").text(),
+                        info.select("div.br-pr-about").text(),
+                        info.select("img[id=product_main_image]").attr("src")
+                    )
+                }
+                .collect(toList<CPU>())
         }
     }
 
@@ -107,6 +99,12 @@ class MainActivity : AppCompatActivity(), OnItemListener {
             }
             ORIENTATION_PORTRAIT == resources.configuration.orientation -> {
                 supportFragmentManager.beginTransaction()
+                    .setCustomAnimations(
+                        android.R.anim.slide_in_left,
+                        0,
+                        0,
+                        android.R.anim.slide_out_right
+                    )
                     .replace(R.id.list_container, InfoFragment.newInstance(cpu))
                     .addToBackStack(null)
                     .commit()
@@ -123,6 +121,10 @@ class MainActivity : AppCompatActivity(), OnItemListener {
 
     private fun clearBackStack() {
         supportFragmentManager.popBackStack(null, POP_BACK_STACK_INCLUSIVE)
+    }
+
+    private fun initAdapter() {
+        dataAdapter = DataAdapter(processors, this)
     }
 
     private fun initListFragmentAdapter() = ListFragment().apply {
