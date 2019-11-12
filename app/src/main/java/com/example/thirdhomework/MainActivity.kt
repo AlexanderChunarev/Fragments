@@ -1,8 +1,11 @@
 package com.example.thirdhomework
 
+import android.content.Context
 import android.content.res.Configuration.*
+import android.net.ConnectivityManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Toast
 import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
 import com.example.thirdhomework.data.CPU
 import com.example.thirdhomework.fragments.DataAdapter
@@ -11,6 +14,7 @@ import com.example.thirdhomework.fragments.ListFragment
 import com.example.thirdhomework.listener.OnItemListener
 import kotlinx.coroutines.*
 import org.jsoup.Jsoup
+import java.io.IOException
 import java.io.Serializable
 import java.util.stream.Collectors.*
 
@@ -23,41 +27,62 @@ class MainActivity : AppCompatActivity(), OnItemListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+
         if (savedInstanceState != null) {
             if (savedInstanceState.getSerializable(LIST_KEY) != null) {
                 processors = savedInstanceState.getSerializable(LIST_KEY) as MutableList<CPU>
                 initAdapter()
                 initFragments()
+            } else {
+                loadData()
             }
             if (savedInstanceState.getSerializable(CPU_KEY) != null) {
                 currentCPU = savedInstanceState.getSerializable(CPU_KEY) as CPU
                 switchFragment(currentCPU!!)
             }
         } else {
+            loadData()
+        }
+        initCpuObject()
+    }
+
+    private fun loadData() {
+        if (checkConnection()) {
             runBlocking {
                 getData()
             }
             initAdapter()
             initFragments()
+        } else {
+            Toast.makeText(this, "No internet connection", Toast.LENGTH_SHORT).show()
         }
-        initCpuObject()
+    }
+
+    private fun checkConnection(): Boolean {
+        val connectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        return connectivityManager.activeNetwork != null
     }
 
     private suspend fun getData() = withContext(Dispatchers.IO) {
         val doc = Jsoup.connect(URL).get()
         val element = doc.select("div.br-static")
-        processors = element.run {
-            select("h3").select("a")
-                .parallelStream()
-                .map { url -> Jsoup.connect(url.attr("abs:href")).get() }
-                .map { info ->
-                    CPU(
-                        info.select("h1[class=title]").text(),
-                        info.select("div.br-pr-about").text(),
-                        info.select("img[id=product_main_image]").attr("src")
-                    )
-                }
-                .collect(toList<CPU>())
+        try {
+            processors = element.run {
+                select("h3").select("a")
+                    .parallelStream()
+                    .map { url -> Jsoup.connect(url.attr("abs:href")).get() }
+                    .map { info ->
+                        CPU(
+                            info.select("h1[class=title]").text(),
+                            info.select("div.br-pr-about").text(),
+                            info.select("img[id=product_main_image]").attr("src")
+                        )
+                    }
+                    .collect(toList<CPU>())
+            }
+        } catch (error: IOException) {
+            error.printStackTrace()
         }
     }
 
@@ -136,7 +161,9 @@ class MainActivity : AppCompatActivity(), OnItemListener {
         if (currentCPU != null) {
             outState.putSerializable(CPU_KEY, currentCPU)
         }
-        outState.putSerializable(LIST_KEY, processors as Serializable)
+        if (processors.isNotEmpty()) {
+            outState.putSerializable(LIST_KEY, processors as Serializable)
+        }
     }
 
     companion object {
