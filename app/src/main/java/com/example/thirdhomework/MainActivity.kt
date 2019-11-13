@@ -233,6 +233,7 @@ class MainActivity : AppCompatActivity(), OnItemListener {
         val notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
@@ -243,6 +244,7 @@ class MainActivity : AppCompatActivity(), OnItemListener {
                 notificationManager.createNotificationChannel(this)
             }
         }
+
         NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID).apply {
             this.setAutoCancel(true)
                 .setDefaults(Notification.DEFAULT_ALL)
