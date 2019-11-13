@@ -13,12 +13,8 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
-import com.example.thirdhomework.data.CPU
-import com.example.thirdhomework.data.Coordinate
-import com.example.thirdhomework.fragments.DataAdapter
-import com.example.thirdhomework.fragments.InfoFragment
-import com.example.thirdhomework.fragments.ListFragment
-import com.example.thirdhomework.fragments.LocationFragment
+import com.example.thirdhomework.data.*
+import com.example.thirdhomework.fragments.*
 import com.example.thirdhomework.listener.OnItemListener
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -27,6 +23,12 @@ import org.jsoup.Jsoup
 import java.io.IOException
 import java.io.Serializable
 import java.util.stream.Collectors.*
+import android.app.NotificationManager
+import android.app.NotificationChannel
+import android.app.Notification
+import android.os.Build
+import androidx.core.app.NotificationCompat
+
 
 class MainActivity : AppCompatActivity(), OnItemListener {
     private lateinit var dataAdapter: DataAdapter
@@ -199,6 +201,7 @@ class MainActivity : AppCompatActivity(), OnItemListener {
                 run {
                     if (task.isSuccessful && task.result != null) {
                         task.result.apply {
+                            locationNotification(longitude, latitude)
                             locationFragment =
                                 LocationFragment.newInstance(Coordinate(longitude, latitude))
                             supportFragmentManager.beginTransaction()
@@ -226,11 +229,37 @@ class MainActivity : AppCompatActivity(), OnItemListener {
         )
     }
 
+    private fun locationNotification(longitude: Double, latitude: Double) {
+        val notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel(
+                NOTIFICATION_CHANNEL_ID,
+                "Location notification",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                enableVibration(true)
+                notificationManager.createNotificationChannel(this)
+            }
+        }
+        NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID).apply {
+            this.setAutoCancel(true)
+                .setDefaults(Notification.DEFAULT_ALL)
+                .setWhen(System.currentTimeMillis())
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle("Location")
+                .setContentText("Longitude: $longitude; Latitude: $latitude")
+            notificationManager.notify(1, this.build())
+        }
+    }
+
     companion object {
         const val REQUEST_CODE = 100
         const val CPU_KEY = "position"
         const val LIST_KEY = "list"
         const val COORDINATE_KEY = "coordinate"
+        const val NOTIFICATION_CHANNEL_ID = "notification_1"
         const val URL =
             "https://brain.com.ua/ukr/category/Procesory-c1097-128/filter=19590-66000347500,19590-68000009500,19590-75000454900,528-86000152200,528-86029031100/"
     }
