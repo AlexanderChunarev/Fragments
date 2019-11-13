@@ -155,7 +155,7 @@ class MainActivity : AppCompatActivity(), OnItemListener {
     private fun isItemSelected() = currentCPU != null
 
     private fun clearBackStack() {
-        if (!isItemSelected() && supportFragmentManager.backStackEntryCount > 0) {
+        if (supportFragmentManager.backStackEntryCount > 0) {
             supportFragmentManager.popBackStack(null, POP_BACK_STACK_INCLUSIVE)
         }
     }
@@ -182,9 +182,11 @@ class MainActivity : AppCompatActivity(), OnItemListener {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        requestPermission()
         if (item.itemId == R.id.location_btn) {
-            requestPermission()
-            showCoordinates()
+            if (supportFragmentManager.backStackEntryCount == 0) {
+                showCoordinates()
+            }
         }
         return super.onOptionsItemSelected(item)
     }
