@@ -4,13 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/darker_gray"
+    android:background="@color/backgroundColor"
     tools:context=".fragments.InfoFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/darker_gray"
+        android:padding="6dp"
         tools:context=".fragments.InfoFragment">
 
         <TextView
@@ -19,9 +19,11 @@
             android:layout_height="wrap_content"
             android:text="@string/nothing_to_show"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textStyle="normal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/cpu_description"/>
 
         <TextView
             android:id="@+id/cpu_description"

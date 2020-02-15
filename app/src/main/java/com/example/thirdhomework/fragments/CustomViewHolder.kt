@@ -9,7 +9,7 @@ import kotlinx.android.synthetic.main.list_item.view.*
 
 class CustomViewHolder(view: View, private val onItemListener: OnItemListener) :
     RecyclerView.ViewHolder(view) {
-    val image: ImageView = view.phone_image
+    val image: ImageView = view.cpu_image
     val name: TextView = view.name
     val listListener = view.setOnClickListener {
         onItemListener.onClickItem(adapterPosition)
